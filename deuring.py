@@ -1021,6 +1021,7 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
 
 
 def compute_coprime_basis(D):
+def compute_coprime_basis(D, endomorphism_ring = None):
     """
     Start with basis <1, i, (i + j) / 2, (1 + k) / 2>
     and find a new basis such that the norm of each basis
@@ -1029,6 +1030,11 @@ def compute_coprime_basis(D):
     TODO: is this the best method?
     """
     O0_basis = O0.basis()
+    if endomorphism_ring:
+        OO = endomorphism_ring
+    else:
+        OO = O0
+    O0_basis = OO.basis()
     θs = []
     for f in O0_basis:
         while True:
@@ -1052,6 +1058,7 @@ def find_torsion_basis_EndE(θPs, D):
 
 
 def kernel_to_ideal(P, D, connecting_isogenies=None):
+def kernel_to_ideal(P, D, connecting_isogenies=None, endomorphism_ring = None):
     """
     Given a point P ∈ E[D] compute the
     ideal I(<P>))
@@ -1059,6 +1066,7 @@ def kernel_to_ideal(P, D, connecting_isogenies=None):
     Optional: If E is not E0, we can still
     find an ideal provided a connecting
     isogeny ϕ : E → E0.
+    For this it is necessary also the endomorphism_ring O
     """
     # Compute a basis β1,β2,β3,β4 of O0
     # with norm coprime to D
