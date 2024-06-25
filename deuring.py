@@ -27,7 +27,7 @@ IdealToIsogenyFromKLPT(): Given an ideal I with norm l^* and left order O, the c
 """
 
 # Sage imports
-from sage.all import gcd, ZZ, factor, floor
+from sage.all import gcd, ZZ, factor, floor, log, prod
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
 # Local imports
@@ -41,14 +41,17 @@ from ideals import (
     multiply_ideals,
     ideal_generator,
     quaternion_basis_gcd,
-    ideal_filtration
+    ideal_filtration,
+    pushforward_ideal,
+    pullback_ideal
 )
 from isogenies import (
     torsion_basis,
     dual_isogeny_and_kernel,
     dual_isogeny,
     EllipticCurveIsogenyFactored,
-    BiDLP
+    BiDLP,
+    DLP
 )
 from KLPT import EquivalentSmoothIdealHeuristic
 from mitm import meet_in_the_middle_with_kernel
@@ -1119,14 +1122,13 @@ def isogeny_to_ideal_step(iso_step,tau_T,ideal_T):
         E0
 
     the output is ideal_iso_step ~ ideal_T
-        
     '''
     # first we need to get the kernel
     ker = isogeny_to_kernel(iso_step)
 
     # pull + ker_to_ideal
     Iout = kernel_to_ideal(tau_T.dual()(ker),iso_step.degree())
-    
+
     return pushforward_ideal(O0,ideal_T.right_order(),Iout,ideal_T)
 
 def isogeny_to_ideal(sigma,Jtau,tau_prime,steps = None):
@@ -1143,7 +1145,11 @@ def isogeny_to_ideal(sigma,Jtau,tau_prime,steps = None):
 
     Remark: the algorithm requires the access to an odd avaible torsion T
     '''
-    sigma_factored = [f for fact in sigma.factors() for f in fact.factors() ]
+    sigma_factored = sigma.factors()
+    if sigma_factored[-1].degree() == 1:
+        sigma_factored = [f for fact in sigma_factored[0:-1] for f in fact.factors() ] + [sigma_factored[-1]]
+    else:
+        sigma_factored = [f for fact in sigma_factored for f in fact.factors() ]
     total_deg = len(sigma_factored)
 
     # simple function to get a part of the isogeny walk
@@ -1154,7 +1160,7 @@ def isogeny_to_ideal(sigma,Jtau,tau_prime,steps = None):
     assert step_torsion > 0, 'No avaible 4 torsion'
     torsion_pos = 0
     # we need to initialize the output ideal
-    J_found = 1
+    J_found = ZZ(1)
     if steps:
         total_deg = steps*step_torsion
     for torsion_pos in range(0,total_deg,step_torsion):

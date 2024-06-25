@@ -1,8 +1,9 @@
-from setup import p, O0, logp, loglogp
+from setup import p, O0, logp, loglogp, Dc, T, l
 from KLPT import derive_L, RepresentIntegerHeuristic
 from ideals import left_isomorphism, pullback_ideal
+from sage.all import floor, log
 
-def distinguisher(JJ, Iτ, debug = False):
+def distinguisher(JJ, Iτ):
     """
     A simple and known attack to distinguish simulated transcripts
     from original ones, given the secret key Itau
@@ -24,7 +25,7 @@ def distinguisher(JJ, Iτ, debug = False):
         L,NL,isom_LN = derive_L(JJ, Iτ, Nτ, O0, O1)
 
         # recalculation of e1 from N
-        e1 = floor(logp - log(NL, l) + 1.74 * loglogp) 
+        e1 = floor(logp - log(NL, l) + 1.74 * loglogp)
         L1 = l**e1
 
         # recalculation of possible betas, we may need the scaling

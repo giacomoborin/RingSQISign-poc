@@ -96,7 +96,7 @@ from deuring import IdealToIsogenyFromKLPT, kernel_to_ideal
 from KLPT import RepresentIntegerHeuristic, SigningKLPT
 from compression import compression, decompression
 from utilities import inert_prime, has_order_D
-from setup import E0, O0, Bτ, eτ, p, l, Dc, T_prime, ω, e, f_step_max
+from setup import E0, O0, Bτ, eτ, p, l, Dc, T_prime, ω, e, f_step_max, T
 
 proof.all(False)
 
