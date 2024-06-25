@@ -467,4 +467,4 @@ def non_principal_ideal(O):
         )
         if I.conjugate().is_equivalent(O.unit_ideal()):
             continue
-        return I        return I
+        return I
