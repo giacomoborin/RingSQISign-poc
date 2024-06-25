@@ -106,7 +106,6 @@ def ideal_basis_gcd(I):
     of the basis of its left order.
     """
     I_basis = I.basis_matrix()
-    O_basis = I.left_order().unit_ideal().basis_matrix()
     O_basis = I.left_order().basis_matrix()
 
     # Write I in the basis of its left order
