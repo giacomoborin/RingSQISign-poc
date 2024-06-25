@@ -1063,7 +1063,7 @@ def derive_C_and_D_SigningKLPT(L, N, Iτ, Nτ, EichlerIτ, γ, δ, L2):
 # ====================== #
 
 
-def SigningKLPT(I, Iτ):
+def SigningKLPT(I, Iτ, print_L = False):
     """
     Algorithm 5 (SQISign paper)
 
@@ -1080,7 +1080,6 @@ def SigningKLPT(I, Iτ):
 
     # Make I as small as possible
     I = small_equivalent_ideal(I)
-
     # Orders needed for pushback and pullforward
     O1 = I.left_order()
     assert Iτ.left_order() == O0
@@ -1089,11 +1088,13 @@ def SigningKLPT(I, Iτ):
     # Compute the pullback K of I with left order O0, and
     # find an equivalent prime norm ideal L ~ K.
     L, N, δ = derive_L(I, Iτ, Nτ, O0, O1)
+    if print_L:
+        print(f'DEBUG [SigningKLPT] : the prime ideal is {L = },\n with norm { N = }')
 
     # We want L1 to be big enough that we sensibly find solutions
     # for RepresentIntegerHeuristic(N * L1) but not so big that we
     # find no solutions to the lattice problem in the strong approx.
-    e1 = floor(logp - log(N, l) + 1.74 * loglogp)
+    e1 = floor(logp - log(N, l) + 1.74 * loglogp) 
     L1 = l**e1
 
     # EichlerIτ = ℤ + Iτ = OL(I) ∩ OR(I)
@@ -1168,4 +1169,12 @@ def SigningKLPT(I, Iτ):
             print(f"DEBUG [SigningKLPT]: {factor(J.norm()) = }")
             continue
 
+        if print_L:
+            print(f'DEBUG [SigningKLPT]: Represent integer called on {N}*{L1}\noutput = {γ}')
+            print(f'beta = {β}')
+            print(f'mu = {μ}')
+            print(f'{J_prime = }')
+            print(f'{J = }')
+
+        return J
         return J
