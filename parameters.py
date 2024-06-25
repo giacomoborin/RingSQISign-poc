@@ -72,5 +72,5 @@ p6983 = {
 # Expect SQISign to take 30 seconds for p_toy
 # and about 15 minutes for p6983
 
-# params = p_toy
-params = p6983
+params = p_toy
+# params = p6983
