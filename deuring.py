@@ -1088,3 +1088,94 @@ def kernel_to_ideal(P, D, connecting_isogenies=None, endomorphism_ring = None):
     # Create the Quaternion Algebra element
     α = βs[k] - a * βs[i] - b * βs[j]
     return O0 * α + O0 * D
+
+
+# ============================================ #
+#   Functions for Isogeny to Ideal Functions  #
+# ============================================ #
+
+def isogeny_to_kernel(iso_step):
+    P,Q = torsion_basis(iso_step.domain(),iso_step.degree())
+    Q_prime, P_prime = iso_step(Q),iso_step(P)
+    #print(f'{P_prime.order(),Q_prime.order() = }, {iso_step.degree() = }')
+    if P_prime.order() == iso_step.degree():
+        a = DLP(Q_prime,P_prime,iso_step.degree())
+        ker = Q - a*P
+    else:
+        a = DLP(P_prime,Q_prime,iso_step.degree())
+        ker = P - a*Q
+    assert iso_step(ker).is_zero()
+    return ker
+    
+
+def isogeny_to_ideal_step(iso_step,tau_T,ideal_T):
+    '''
+    situation:
+        E --- iso_step ---> E'   (degree iso_step is 2^*)
+        ^
+        |
+      tau_T ~ ideal_T   (degree tau_T is odd)
+        |
+        E0
+
+    the output is ideal_iso_step ~ ideal_T
+        
+    '''
+    # first we need to get the kernel
+    ker = isogeny_to_kernel(iso_step)
+
+    # pull + ker_to_ideal
+    Iout = kernel_to_ideal(tau_T.dual()(ker),iso_step.degree())
+    
+    return pushforward_ideal(O0,ideal_T.right_order(),Iout,ideal_T)
+
+def isogeny_to_ideal(sigma,Jtau,tau_prime,steps = None):
+    '''
+    situation:
+        E --- sigma ---> E'   (degree sigma is 2^*, to be split in piecies)
+        ^
+        |
+      tau_prime ~ Jtau   (degree tau_T is 2^*)
+        |
+        E0
+
+    the output is J_out ~ sigma such that J_out.left_order() == Jtau.right_order()
+
+    Remark: the algorithm requires the access to an odd avaible torsion T
+    '''
+    sigma_factored = [f for fact in sigma.factors() for f in fact.factors() ]
+    total_deg = len(sigma_factored)
+
+    # simple function to get a part of the isogeny walk
+    def step(start, steps, isogeny = None):
+        return prod([ sigma_factored[i] for i in range(start+steps -1,start-1,-1)])
+
+    step_torsion = log((p**2 - 1).p_primary_part(2),2) - 1
+    assert step_torsion > 0, 'No avaible 4 torsion'
+    torsion_pos = 0
+    # we need to initialize the output ideal
+    J_found = 1
+    if steps:
+        total_deg = steps*step_torsion
+    for torsion_pos in range(0,total_deg,step_torsion):
+        print(f'Debug [isogeny_to_ideal] Doing step from {torsion_pos} to {min(torsion_pos + step_torsion,total_deg)}')
+        iso_step = step(torsion_pos,min(step_torsion,total_deg-torsion_pos))
+        for _ in range(10):
+            Ktau = EquivalentSmoothIdealHeuristic(Jtau, T**2) # , equivalent_prime_ideal=Iτ )
+            if Ktau:
+                break
+        tau_T = IdealToIsogenyCoprime(Ktau, Jtau, tau_prime)
+        alpha_T = left_isomorphism(Jtau, Ktau)
+        assert Jtau*alpha_T == Ktau
+        
+        new_J_found = alpha_T  * isogeny_to_ideal_step(iso_step,tau_T,Ktau) * (alpha_T** (-1))
+        assert new_J_found.left_order() == Jtau.right_order()
+        # should satisfy J_found == J + 2**16*J.left_order()
+        
+        J_found = J_found*new_J_found
+        # should satisfy J_found == J + 2**16*J.left_order()
+        Jtau = Jtau * J_found
+        tau_prime = iso_step * tau_prime
+
+    return J_found
+
