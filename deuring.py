@@ -41,7 +41,8 @@ from ideals import (
     multiply_ideals,
     ideal_generator,
     quaternion_basis_gcd,
-    ideal_filtration
+    ideal_filtration,
+    ideal_filtration_deg
 )
 from isogenies import (
     torsion_basis,
@@ -924,7 +925,7 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
         # norm ideal, so we use this and save some time
         # within KLPT
         if K_prime:
-            # TODO: is there any point in lopping this??
+            # TODO: is there any point in looping this??
             for _ in range(10):
                 J = EquivalentSmoothIdealHeuristic(
                     K, T**2, equivalent_prime_ideal=K_prime
@@ -1013,6 +1014,165 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
     ϕI = EllipticCurveHom_composite.from_factors(ϕi_factors)
 
     return ϕI
+
+def IdealToIsogenyFromKLPT_deg(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E0=False):
+    """
+    Computes the isogeny ϕI whose kernel corresponds to the ideal I.
+
+    Input: A left O-ideal I of norm a power of l,
+           K a left O0-ideal and right O-ideal of norm l^•
+           The corresponding ϕK : E / <K>.
+
+           Optional:
+           I_prime: an ideal equivalent to I with small prime norm
+           K_prime: an ideal equivalent to K with small prime norm
+
+           Explanation:
+           If we know an ideal with small prime norm which is equivalent
+           to I or K we can speed up this algorithm by skipping part of
+           the KLPT step inside IdealToIsogenySmallFromKLPT or
+           IdealToIsogenyCoprime respectively.
+
+    Output: ϕI : E / <I>
+    """
+    # Ensure the norms are as expected
+    assert I.norm() % l == 0 or I.norm() == 1
+    assert K.norm() % l == 0 or K.norm() == 1
+
+    # Ensure the orders are as expected
+    assert I.left_order() == K.right_order()
+    assert K.left_order() == O0
+
+    # If we supply equivalent_prime_ideal, make sure it
+    # is of the right form
+    if I_prime:
+        assert equivalent_left_ideals(
+            I, I_prime
+        ), "Input I_prime is not equivalent to I"
+        assert ZZ(I_prime.norm()).is_prime(), "Input I_prime does not have prime order"
+
+    if K_prime:
+        assert equivalent_left_ideals(
+            K, K_prime
+        ), "Input K_prime is not equivalent to I"
+        assert ZZ(K_prime.norm()).is_prime(), "Input K_prime does not have prime order"
+
+    # =============================================== #
+    #   Helper Functions for IdealToIsogenyFromKLPT   #
+    # =============================================== #
+
+    def derive_J_and_phi_J(K, ϕK, K_prime=None):
+        """
+        Given a connecting ideal K and corresponding isogeny
+        compute an equivalent ideal J with norm coprime to
+        K and the equivalent isogeny ϕJ
+
+        Optional: K_prime is an equivalent ideal to K with 
+        prime norm
+        """
+        # In keygen we send
+        #  - K  = O0.unit_ideal()
+        #  - ϕK = E0.isogeny(E0(0))
+        # Which allows us to set 'J' to be the unit 
+        # ideal, and ϕJ to be a trivial isogeny too
+        if K.norm() == 1:
+            J = O0.unit_ideal()
+            ϕJ = E0.isogeny(E0(0))
+            return J, ϕJ
+
+        # Sometimes we already know an equivalent prime
+        # norm ideal, so we use this and save some time
+        # within KLPT
+        if K_prime:
+            # TODO: is there any point in looping this??
+            for _ in range(10):
+                J = EquivalentSmoothIdealHeuristic(
+                    K, T**2, equivalent_prime_ideal=K_prime
+                )
+                if J:
+                    break
+            ϕJ = IdealToIsogenyCoprime(J, K, ϕK)
+            return J, ϕJ
+
+        # Generic case
+        # Compute a smooth norm ideal J
+        J = None
+        for _ in range(10):
+            J = EquivalentSmoothIdealHeuristic(K, T**2)
+            if J is not None:
+                break
+
+        if J is None:
+            exit("Was unable to compute an equivalent ideal J ~ K")
+
+        # Compute the isogeny ϕJ : E0 / <J>
+        ϕJ = IdealToIsogenyCoprime(J, K, ϕK)
+
+        assert equivalent_left_ideals(J, K)
+        return J, ϕJ
+
+    # ==================== #
+    # End Helper Functions #
+    # ==================== #
+
+    J, ϕJ = derive_J_and_phi_J(K, ϕK, K_prime=K_prime)
+
+    # Compute a chain:
+    # I = Iv ⊂ ... ⊂ I1 ⊂ I0
+    # I_short is the quotient of these elements
+    I_short,Ich = ideal_filtration_deg(
+        I, l, (2 * f_step_max + Δ), ch, small_step_first=end_close_to_E0
+    )
+
+    # Create a list to store the isogeny factors
+    ϕi_factors = []
+
+    # For the last step, we can use JIi_prime = I_prime
+    # To avoid problems computing equivalent prime norm ideals
+    JIi_prime = None
+
+    # First element in Iv is the unit ideal of O
+    # We don't need this.
+    for ind, Ii in enumerate(I_short[1:], start=1):
+        print_info(
+            f"STARTING WITH ELEMENT {ind}/{len(I_short) - 1} OF FILTRATION CHAIN...", 
+            banner="-"
+        )
+        # On last loop, use the trick that we know an equivalent
+        # prime norm ideal
+        if ind == len(I_short) - 1:
+            JIi_prime = I_prime
+
+        # J * Ii
+        alpha = left_isomorphism(K, J)  # K*α = J
+        JIi = multiply_ideals(J, Ii, beta=alpha)
+
+        # Compute
+        # ϕ = ϕ2 ◦ θ ◦ ϕ1 : E1 → E2 of degree l^(2f+Δ) such that ϕJIi = ϕ ◦ ϕJ,
+        # J ∼ JIi of norm dividing T^2,
+        # ϕJ = E / <J> (output J, not input J)
+
+        ϕi, J, ϕJ = IdealToIsogenySmallFromKLPT(
+            JIi, J, K, ϕJ, ϕK, equivalent_prime_ideal=JIi_prime
+        )
+
+        # Add the isogeny ϕi to the list of factors
+        # May need to correct it with an isomorphism
+        if ind > 1:
+            ϕi_prev = ϕi_factors[ind - 2]
+            ι = ((ϕi_prev).codomain()).isomorphism_to(ϕi.domain())
+            ϕi = ϕi * ι
+        ϕi_factors.append(ϕi)
+
+        # If we're not in the last loop
+        # Update the ideal K and the isogeny ϕK
+        K = K * Ii
+        ϕK = ϕi * ϕK
+
+    ϕI = EllipticCurveHom_composite.from_factors(ϕi_factors)
+
+    return ϕI,K
+
 
 
 # ============================================ #

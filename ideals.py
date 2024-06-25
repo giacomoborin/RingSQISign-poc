@@ -439,6 +439,44 @@ def ideal_filtration(I, l, step_size, small_step_first=False):
 
     return I_chain
 
+def ideal_filtration_deg(I, l, step_size, ch_deg, small_step_first=False):
+    """
+    Given an ideal I of norm l^* compute
+    a chain, length e, of ideals I_i with norm step = l^f
+    """
+    # ideal_filtration expects a cyclic ideal
+    #
+    assert is_cyclic(I), "Input ideal is not cyclic!"
+
+    O = I.left_order()
+    I_long = O.unit_ideal()
+    I_short = O.unit_ideal()
+
+    # Compute appropriate step lengths given I
+    step_lengths = ideal_filtration_steps(
+        I, l, step_size, small_step_first=small_step_first
+    )
+
+    
+
+    # I = Ik ⊂ ... ⊂ I1 ⊂ I0
+    # I_chain is the quotient of the contained ideals
+    # I = Ik ⊂ ... ⊂ I1 ⊂ I0
+    # with norm step_length
+
+    # Build up a chain of the quotients
+    I_chain = [I_short]
+    for step_length in step_lengths:
+        I_short_i = invert_ideal(I_long) * I + I_long.right_order() * l**step_length
+        I_long = I_long * I_short_i
+
+        I_chain.append(I_short_i)
+
+    Ich = invert_ideal(I_long) * I + I_long.right_order() * ch_deg
+
+    return I_chain, Ich
+
+
 # ================================================= #
 # Helper functions for tests, not used in main code #
 # ================================================= #

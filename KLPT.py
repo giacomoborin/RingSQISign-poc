@@ -1168,4 +1168,153 @@ def SigningKLPT(I, Iτ):
             print(f"DEBUG [SigningKLPT]: {factor(J.norm()) = }")
             continue
 
+        if print_L:
+            print(f'DEBUG [SigningKLPT]: Represent integer called on {N}*{L1}\noutput = {γ}')
+            print(f'beta = {β}')
+            print(f'mu = {μ}')
+            print(f'{J_prime = }')
+            print(f'{J = }')
+
+        return J
+
+
+
+def deg_SigningKLPT(I, Iτ, ch):
+    """
+    Algorithm 5 (SQISign paper)
+
+    Input: Iτ a left O0-ideal and right O-ideal of norm Nτ,
+           I, a left O-ideal
+
+    Output: J ∼ I of norm l^e' * ch, where e' is... bho maybe the fixed e (global param)
+    """
+    assert is_cyclic(I), "I is not cyclic"
+    assert is_cyclic(Iτ), "Iτ is not cyclic"
+
+    # Prime norm ideal
+    Nτ = ZZ(Iτ.norm())
+    print('Nτ is Prime?',Nτ.is_prime())
+
+    # Make I as small as possible
+    I = small_equivalent_ideal(I)
+
+    # Orders needed for pushback and pullforward
+    O1 = I.left_order()
+    assert Iτ.left_order() == O0
+    assert Iτ.right_order() == O1
+
+    # Compute the pullback K of I with left order O0, and
+    # find an equivalent prime norm ideal L ~ K.
+    L, N, δ = derive_L(I, Iτ, Nτ, O0, O1)
+
+    # EichlerIτ = ℤ + Iτ = OL(I) ∩ OR(I)
+    EichlerIτ = eichler_order_from_ideal(Iτ)
+
+    # Store γ which appear to stop checking the element twice
+    seen_γ = set()
+
+    # TODO how many times should we try to solve the strong approx?
+    for _ in range(2000):
+        # We want L1 to be big enough that we sensibly find solutions
+        # for RepresentIntegerHeuristic(N * L1) but not so big that we
+        # find no solutions to the lattice problem in the strong approx.
+        # here we need to change L1 to a divisor of ch * l^e, we hope e to be 0 
+        e1 = floor(logp - log(N, 2) + 1.74 * loglogp)
+        # we want L1 s.t. log(L1,2) ~ e1 
+        L1 = 1
+        facT = list(ch.factor())
+        while log(L1,2) < e1 and facT:
+            l, exp = choice(facT)
+            L1 *= l
+            facT.remove((l, exp))
+            if exp > 1:
+                facT.append((l, exp - 1))
+
+
+        if log(L1,2) < e1:
+            e_missing = ceil(e1-log(L1,2))
+            L1 = 2**e_missing * L1 
+
+        print('L1 =',L1,'ch',ch)
+
+
+        ch_missing = prod([f[0]**f[1] for f in facT])
+        γ = RepresentIntegerHeuristic(N * L1)
+        if γ is None:
+            print(f"DEBUG [SigningKLPT]: Unable to compute a γ, trying again.")
+            continue
+
+        # No point trying the same element twice
+        if γ in seen_γ:
+            print(f"DEBUG [SigningKLPT]: Already tried γ, trying again.")
+            continue
+        seen_γ.add(γ)
+
+        # If this GCD is non-trivial, EichlerModConstraint will break
+        if gcd(γ.reduced_norm(), Nτ) != 1:
+            continue
+
+        # Given L1 and γ derive the bound L2. We can estimate how non-cyclic
+        # the end result will be from the gcd of the elements of γ in the basis
+        # of O0, but it's not perfect, so sometimes we need to run SigningKLPT
+        # many times to ensure that n(J) = 2^1000
+        # we need to adapt L2 = derive_L2_SigningKLPT(γ, L1, e1)
+        g = quaternion_basis_gcd(γ, O0)
+        extra = 2 * (floor(loglogp / 4) + ZZ(gcd(g, L1).valuation(2)))
+        e2 = e - e1 + extra 
+
+        print('e',e)
+        print('e2',e2)
+
+        L2 = ch_missing
+        if log(L2,2) < e2:
+            e_missing = ceil(e2-log(L2,2))
+            L2 = 2**e_missing * L2
+
+        print('L2 =',L2)
+
+        # Look for  Given L1 = l^e1 and γ try and compute L2
+        # so that the output of SigningKLPT has norm
+        # exactly 2^eμ = j(C + ωD) such that L2 / Nrd(μ) is a square mod N*Nτ
+        C, D = derive_C_and_D_SigningKLPT(L, N, Iτ, Nτ, EichlerIτ, γ, δ, L2)
+        if C is None:
+            print(f"DEBUG [SigningKLPT]: Unable to compute a C,D, given γ.")
+            continue
+
+        # Search for a solution to the strong approximation. As the L2 is
+        # fixed, we only try once.
+        μ = StrongApproximationHeuristic(
+            N * Nτ, C, D, factor(L2), composite_factors=(N, Nτ)
+        )
+
+        # No solution found, try another γ
+        if not μ:
+            continue
+
+        # Strong approximation norm check
+        assert μ.reduced_norm() == L2
+        print(f"INFO [SigningKLPT]: Found a solution to the StrongApproximation!")
+
+        # Now construct the equivalent ideal J
+        β = γ * μ
+        J_prime = chi(β, L)
+
+        # J = [Iτ]_* J'
+        J = pushforward_ideal(O0, O1, J_prime, Iτ)
+
+        # Check things are actually equivalent
+        assert equivalent_left_ideals(I, J)
+
+        # Make sure the output is cyclic
+        J, _ = make_cyclic(J)
+
+        # Rarely, we will have estimated L2 wrong and
+        # in the process of making J cyclic, computed
+        # an ideal J with n(J) != l^e 
+        if J.norm() != L1*L2:
+            print(f"DEBUG [SigningKLPT]: J has the wrong norm, trying again")
+            print(f"DEBUG [SigningKLPT]: {factor(J.norm()) = }")
+            continue
+
+        print(f"DEBUG [SigningKLPT]: J should be fine (?)")
         return J
