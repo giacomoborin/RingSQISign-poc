@@ -1020,7 +1020,6 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
 # ============================================ #
 
 
-def compute_coprime_basis(D):
 def compute_coprime_basis(D, endomorphism_ring = None):
     """
     Start with basis <1, i, (i + j) / 2, (1 + k) / 2>
@@ -1029,7 +1028,6 @@ def compute_coprime_basis(D, endomorphism_ring = None):
 
     TODO: is this the best method?
     """
-    O0_basis = O0.basis()
     if endomorphism_ring:
         OO = endomorphism_ring
     else:
@@ -1057,7 +1055,6 @@ def find_torsion_basis_EndE(θPs, D):
     raise ValueError(f"No basis for E[D] found with given point")
 
 
-def kernel_to_ideal(P, D, connecting_isogenies=None):
 def kernel_to_ideal(P, D, connecting_isogenies=None, endomorphism_ring = None):
     """
     Given a point P ∈ E[D] compute the
