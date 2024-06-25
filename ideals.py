@@ -95,6 +95,7 @@ def is_integral(I):
     """
     Checks whether the input ideal is integral.
     """
+    # TODO check if left or right order are already calculated 
     return all([b in I.left_order() for b in I.basis()])
 
 
@@ -106,6 +107,7 @@ def ideal_basis_gcd(I):
     """
     I_basis = I.basis_matrix()
     O_basis = I.left_order().unit_ideal().basis_matrix()
+    O_basis = I.left_order().basis_matrix()
 
     # Write I in the basis of its left order
     M = I_basis * O_basis.inverse()
@@ -466,4 +468,4 @@ def non_principal_ideal(O):
         )
         if I.conjugate().is_equivalent(O.unit_ideal()):
             continue
-        return I
+        return I        return I
