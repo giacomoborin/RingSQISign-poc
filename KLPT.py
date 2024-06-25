@@ -1177,4 +1177,3 @@ def SigningKLPT(I, Iτ, print_L = False):
             print(f'{J = }')
 
         return J
-        return J
