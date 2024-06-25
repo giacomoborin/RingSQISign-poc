@@ -66,3 +66,46 @@ valid = verifier.verify_response(EA, E1, S, phi_ker)
 
 print_info(f"SQISign example worked: {valid}")
 print_info(f"SQISign took {time.time() - sqisign_time:5f}")
+
+from setup import p, T, Dc, l, f_step_max, e
+
+print_info(f"Starting Recovering ideal from Isogeny")
+isogeny_to_ideal_time = time.time()
+
+from isogenies import EllipticCurveIsogenyFactored
+from ideals import left_isomorphism
+from compression import decompression
+
+phi = EllipticCurveIsogenyFactored(E1, phi_ker, order=Dc)
+E2 = phi.codomain()
+E2.set_order((p**2 - 1) ** 2)
+
+# Decompress sigma
+print(f"INFO [TEST]: Decompressing the isogeny from a bitstring")
+
+EA = prover.pk
+sigma = decompression(EA, E2, S, l, f_step_max, e)
+tau_prime, Itau, Jtau = prover.sk
+
+from deuring import isogeny_to_ideal
+
+# TODO : since the compressed isogeny already contain the kernel coordinates we 
+# should try to use it to get immediatly the kernels.
+J = isogeny_to_ideal(sigma,Jtau,tau_prime)
+print(f'calculation took {time.time() - isogeny_to_ideal_time:5f}')
+
+alpha = left_isomorphism(Itau, Jtau)
+JJ = alpha  * J * (alpha** (-1))
+
+from attack import distinguisher
+
+print_info('Starting distinguisher')
+
+dist_time = time.time()
+distinguisher(JJ, Itau)
+print(f'calculation took {time.time() - dist_time:5f}')
+
+
+
+
+
