@@ -369,13 +369,13 @@ def compression(E, σ, l, f):
     return σ_compressed
 
 
-def decompression(E_start, E_end, σ_compressed, l, f, σ_length):
+def decompression(E_start, σ_compressed, l, f, σ_length):
     """
     Given a bit string:
 
     σ_compressed = swap_bit || S1 || s2 || S2 || ... || sv || Sv
 
-    Compute the isogeny σ : E_start → E_end of degree l^σ_length isogeny
+    Compute the isogeny σ : E_start → * of degree l^σ_length isogeny
     """
     # Extract integers from the encoded bitstring
     swap_bit, dlogs, hints = bitstring_to_data(σ_compressed, f)
@@ -419,12 +419,4 @@ def decompression(E_start, E_end, σ_compressed, l, f, σ_length):
     σ_factors.append(σi)
 
     σ = EllipticCurveHom_composite.from_factors(σ_factors)
-    Eσ = σ.codomain()
-
-    assert Eσ.is_isomorphic(
-        E_end
-    ), "The isogeny σ does not end at a curve isomorphic to E_end"
-    # Use an isomorphism to ensure the codomain
-    # of σ is E_end
-    iso = Eσ.isomorphism_to(E_end)
-    return iso * σ
+    return σ
