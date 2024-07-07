@@ -19,6 +19,11 @@ from sage.all import (
     Matrix,
     vector,
     prod,
+    sqrt,
+    is_prime,
+    identity_matrix,
+    QQ,
+    matrix
 )
 
 # Local imports
@@ -468,3 +473,48 @@ def non_principal_ideal(O):
         if I.conjugate().is_equivalent(O.unit_ideal()):
             continue
         return I
+    
+def random_equivalent_prime_ideal_bounded(I, Bound, max_iter = 10000, LLL_coeff = False):
+    '''
+    On input an ideal I and an integer Bound return a random
+    equivalent ideal of prime norm smaller than Bound
+    '''
+    B = I.basis()
+    G = I.gram_matrix()
+    U = G.LLL_gram().transpose()
+    M = [sum(c * g for c, g in zip(row, B)) for row in U]
+    n_I = I.norm()
+    i,j,k = I.quaternion_algebra().gens()
+    if LLL_coeff:
+        m = [ceil(sqrt(Bound/(el.reduced_norm()/n_I))) for el in M]
+    else:
+        def ip(a,b):
+            return 1/2*( (a + b).reduced_norm() - a.reduced_norm() - b.reduced_norm())
+        T = identity_matrix( QQ, 4 )    # in T we will have finally the transfromation matrix
+        C = vector( M )    # in C we will have finally the Gram-Schmidt basis
+        for k in range(4-1):
+            S = identity_matrix( QQ, 4 )
+            for j in range(k+1, 4):
+                S[j, k] = -ip( C[j], C[k] ) / ip( C[k], C[k] )
+            T = S*T
+            C = S*C
+        mu = matrix(QQ,4,[[ ip(M[i],C[j])/ip(C[j],C[j]) for j in range(i)] + [1] + [0 for _ in range(4 - i -1)]  for i in range(4)])
+        m = [0,0,0,0]
+        for i in [3,2,1,0]:
+            m[i] = sqrt(Bound*n_I/(C[i].reduced_norm())) + sum( [abs(mu[j,i])*m[j] for j in range(i)])
+            m[i] = ceil(m[i])
+    it = 0
+    while it < max_iter:
+        it += 1
+        x = [randint(-mi,mi) for mi in m]
+        v = vector(x)
+        el = sum( v[i]*M[i] for i in range(4))
+        n = el.reduced_norm()/n_I
+        assert(n.is_integer())
+        n = ZZ(n)
+        if(is_prime(n) and n <= Bound):
+            assert(el in I)
+            L = I * I.right_order().left_ideal([el.conjugate()/n_I])
+            #print(f'{v}, {it = } log of L norm {log(L.norm(),2).n():.2f}')
+            return L, el.conjugate()/n_I
+    raise ValueError('no element found')
