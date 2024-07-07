@@ -1003,7 +1003,7 @@ def derive_L(I, Iτ, Nτ, O0, O1):
     raise ValueError(f"Never found an equivalent prime norm ideal")
 
 
-def derive_L2_SigningKLPT(γ, L1, e1):
+def derive_L2_SigningKLPT(γ, L1, e1, e = e):
     """
     Given L1 = l^e1 and γ try and compute L2
     so that the output of SigningKLPT has norm
@@ -1063,7 +1063,7 @@ def derive_C_and_D_SigningKLPT(L, N, Iτ, Nτ, EichlerIτ, γ, δ, L2):
 # ====================== #
 
 
-def SigningKLPT(I, Iτ, print_L = False):
+def SigningKLPT(I, Iτ, print_L = False, e = e):
     """
     Algorithm 5 (SQISign paper)
 
@@ -1124,7 +1124,7 @@ def SigningKLPT(I, Iτ, print_L = False):
         # the end result will be from the gcd of the elements of γ in the basis
         # of O0, but it's not perfect, so sometimes we need to run SigningKLPT
         # many times to ensure that n(J) = 2^1000
-        L2 = derive_L2_SigningKLPT(γ, L1, e1)
+        L2 = derive_L2_SigningKLPT(γ, L1, e1, e = e)
 
         # Look for  Given L1 = l^e1 and γ try and compute L2
         # so that the output of SigningKLPT has norm
