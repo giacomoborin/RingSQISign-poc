@@ -33,3 +33,4 @@ If you wish to run SQISign and test the disringuisher you can execute [`example_
 - [Supersingular isogeny graphs and endomorphism rings: reductions and solutions](https://eprint.iacr.org/2018/371), Kirsten Eisenträger, Sean Hallgren, Kristin Lauter, Travis Morrison Christophe Petit (2018).
 - [An improvement to the quaternion analogue of the l-isogeny path problem](https://crypto.iacr.org/2018/affevents/mathcrypt/page.html), Christophe Petit and Spike Smith (2018).
 - [Deuring for the People: Supersingular Elliptic Curves with Prescribed Endomorphism Ring in General Characteristic](https://ia.cr/2023/106) Jonathan Komada Eriksen, Lorenz Panny, Jana Sotáková, and Mattia Veroni (2023).
+- [SQIsign2D-West: The Fast, the Small, and the Safer](https://eprint.iacr.org/2024/760) Andrea Basso, Luca De Feo, Pierrick Dartois, Antonin Leroux, Luciano Maino, Giacomo Pope, Damien Robert, Benjamin Wesolowski (2024).
