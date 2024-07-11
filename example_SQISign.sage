@@ -68,7 +68,7 @@ print_info(f"SQISign example worked: {valid}")
 print_info(f"SQISign took {time.time() - sqisign_time:5f}")
 
 from setup import p, T, Dc, l, f_step_max, e
-
+print('\n')
 print_info(f"Starting Recovering ideal from Isogeny")
 isogeny_to_ideal_time = time.time()
 
@@ -84,7 +84,7 @@ E2.set_order((p**2 - 1) ** 2)
 print(f"INFO [TEST]: Decompressing the isogeny from a bitstring")
 
 EA = prover.pk
-sigma = decompression(EA, E2, S, l, f_step_max, e)
+sigma = decompression(EA, S, l, f_step_max, e)
 tau_prime, Itau, Jtau = prover.sk
 
 from deuring import isogeny_to_ideal
@@ -92,20 +92,26 @@ from deuring import isogeny_to_ideal
 # TODO : since the compressed isogeny already contain the kernel coordinates we 
 # should try to use it to get immediatly the kernels.
 J = isogeny_to_ideal(sigma,Jtau,tau_prime)
-print(f'calculation took {time.time() - isogeny_to_ideal_time:5f}')
+print(f'calculation took {time.time() - isogeny_to_ideal_time:5f} seconds')
 
 alpha = left_isomorphism(Itau, Jtau)
-JJ = alpha  * J * (alpha** (-1))
+J_from_klpt = alpha  * J * (alpha** (-1))
 
 from attack import distinguisher
+from ideals import random_ideal
 
-print_info('Starting distinguisher')
-
-dist_time = time.time()
-distinguisher(JJ, Itau)
-print(f'calculation took {time.time() - dist_time:5f}')
-
-
-
-
-
+while True:
+    print('What you want to do?\n  - 0 : simulate an ideal and test\n - 1 : test the ideal from KLPT\n - q : quit')
+    input1 = str(input())
+    dist_time = time.time()
+    if input1 == '1':
+        print_info('Starting distinguisher')
+        JJ = J_from_klpt
+    elif input1 == '0':
+        print_info('Starting distinguisher')
+        # compute a random ideal of same norm and left order
+        JJ = random_ideal(J_from_klpt.norm(), starting_ideal = J_from_klpt)
+    else:
+        break
+    distinguisher(JJ, Itau)
+    print(f'calculation took {time.time() - dist_time:5f} seconds')
