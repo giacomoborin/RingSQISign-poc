@@ -23,8 +23,13 @@ from sage.all import (
     gcd,
     randint,
     choice,
-    two_squares
+    two_squares,
+    numerical_approx,
+    log
 )
+
+def size(x):
+    return log(x,2).numerical_approx(24)
 
 # ======================================= #
 #  Cornacchia's alg. and helper functions #

@@ -1097,51 +1097,69 @@ def kernel_to_ideal(P, D, connecting_isogenies=None, endomorphism_ring = None):
 #   Functions for Isogeny to Ideal Functions  #
 # ============================================ #
 
-def isogeny_to_kernel(iso_step):
-    P,Q = torsion_basis(iso_step.domain(),iso_step.degree())
-    Q_prime, P_prime = iso_step(Q),iso_step(P)
-    #print(f'{P_prime.order(),Q_prime.order() = }, {iso_step.degree() = }')
-    if P_prime.order() == iso_step.degree():
-        a = DLP(Q_prime,P_prime,iso_step.degree())
+def isogeny_to_kernel(phi):
+    """
+    Input:
+        - phi: isogeny
+
+    Output:
+        - point generating the kernel of the isogeny
+    """
+    P,Q = torsion_basis(phi.domain(),phi.degree())
+    Q_prime, P_prime = phi(Q),phi(P)
+    #print(f'{P_prime.order(),Q_prime.order() = }, {phi.degree() = }')
+    if P_prime.order() == phi.degree():
+        a = DLP(Q_prime,P_prime,phi.degree())
         ker = Q - a*P
     else:
-        a = DLP(P_prime,Q_prime,iso_step.degree())
+        a = DLP(P_prime,Q_prime,phi.degree())
         ker = P - a*Q
-    assert iso_step(ker).is_zero()
+    assert phi(ker).is_zero()
     return ker
     
 
-def isogeny_to_ideal_step(iso_step,tau_T,ideal_T):
+def isogeny_to_ideal_step(phi,tau_T,ideal_T):
     '''
-    situation:
-        E --- iso_step ---> E'   (degree iso_step is 2^*)
+    Input:
+        - phi, isogeny of degree power of 2
+        - tau_T, isogeny connecting phi.domain() to E0 of degree coprime to 2
+        - ideal_T, ideal associated to tau_T
+    Output:
+        - ideal_phi, associated to phi
+    Situation:
+        E --- phi ---> E'   (degree phi is 2^*)
         ^
         |
       tau_T ~ ideal_T   (degree tau_T is odd)
         |
         E0
-
-    the output is ideal_iso_step ~ ideal_T
     '''
+    assert not tau_T.degree() % 2 == 0, 'tau_T is not coprime'
     # first we need to get the kernel
-    ker = isogeny_to_kernel(iso_step)
+    ker = isogeny_to_kernel(phi)
 
     # pull + ker_to_ideal
-    Iout = kernel_to_ideal(tau_T.dual()(ker),iso_step.degree())
+    Iout = kernel_to_ideal(tau_T.dual()(ker),phi.degree())
 
     return pushforward_ideal(O0,ideal_T.right_order(),Iout,ideal_T)
 
 def isogeny_to_ideal(sigma,Jtau,tau_prime,steps = None):
     '''
-    situation:
+    Input:
+        - sigma: isogeny of degree power of 2
+        - Jtau: connecting ideal
+        - tau_prime: connecting isogeny
+    
+    Outout:
+        - J_out: ideal assiciated to sigma such that J_out.left_order() == Jtau.right_order()
+
+    Situation:
         E --- sigma ---> E'   (degree sigma is 2^*, to be split in piecies)
         ^
         |
       tau_prime ~ Jtau   (degree tau_T is 2^*)
         |
         E0
-
-    the output is J_out ~ sigma such that J_out.left_order() == Jtau.right_order()
 
     Remark: the algorithm requires the access to an odd avaible torsion T
     '''
@@ -1164,7 +1182,7 @@ def isogeny_to_ideal(sigma,Jtau,tau_prime,steps = None):
     if steps:
         total_deg = steps*step_torsion
     for torsion_pos in range(0,total_deg,step_torsion):
-        print(f'Debug [isogeny_to_ideal] Doing step from {torsion_pos} to {min(torsion_pos + step_torsion,total_deg)}')
+        print(f'DEBUG [isogeny_to_ideal] Doing step from {torsion_pos} to {min(torsion_pos + step_torsion,total_deg)}, {floor(100*torsion_pos/total_deg)} % complete')
         iso_step = step(torsion_pos,min(step_torsion,total_deg-torsion_pos))
         for _ in range(10):
             Ktau = EquivalentSmoothIdealHeuristic(Jtau, T**2) # , equivalent_prime_ideal=Iτ )

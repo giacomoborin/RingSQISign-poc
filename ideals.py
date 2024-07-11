@@ -23,7 +23,7 @@ from sage.all import (
     is_prime,
     identity_matrix,
     QQ,
-    matrix
+    matrix,
 )
 
 # Local imports
@@ -477,7 +477,7 @@ def non_principal_ideal(O):
 def random_equivalent_prime_ideal_bounded(I, Bound, max_iter = 10000, LLL_coeff = False):
     '''
     On input an ideal I and an integer Bound return a random
-    equivalent ideal of prime norm smaller than Bound
+    equivalent ideal of prime norm smaller than Bound.
     '''
     B = I.basis()
     G = I.gram_matrix()
@@ -518,3 +518,36 @@ def random_equivalent_prime_ideal_bounded(I, Bound, max_iter = 10000, LLL_coeff 
             #print(f'{v}, {it = } log of L norm {log(L.norm(),2).n():.2f}')
             return L, el.conjugate()/n_I
     raise ValueError('no element found')
+
+def random_ideal(target_norm, O = None, starting_ideal = None, starting_element = None):
+    """
+    Sample a random primitive left O-ideal of norm = target_norm using Alg 4 from SQIsign2DWest.
+    Input:
+        - target_norm: integer
+        - O: maximal order
+        - starting_ideal: ideal of norm target_norm
+        - starting_element: quaternion of norm target_norm * M
+    Output:
+        - a uniformly random primitive left O-ideal of norm target_norm
+    """
+    if starting_ideal:
+        assert starting_ideal.norm() == target_norm, 'ideal of wrong norm'
+        if O:
+            assert starting_ideal.left_order() == O, 'ideal with wrong left order'
+        else:
+            O = starting_ideal.left_order()
+        starting_element = ideal_generator(starting_ideal)
+    elif starting_element:
+        assert gcd(starting_element.reduced_norm(),target_norm) == target_norm, 'starting element of wrong norm'
+    else:
+        raise ValueError('Not implemented')
+    
+    assert gcd(starting_element).numerator() == 1, 'generator element not primitive'
+    N = target_norm
+    el = sum([ randint(0,N-1)*b for b in O.basis()])
+    while gcd(el.reduced_norm(),N) == 1:
+        el = sum([ randint(0,N-1)*b for b in O.basis()])
+    return O*el*starting_element + N*O
+
+        
+
