@@ -537,7 +537,8 @@ def random_ideal(target_norm, O = None, starting_ideal = None, starting_element 
         else:
             O = starting_ideal.left_order()
         starting_element = ideal_generator(starting_ideal)
-    elif starting_element:
+    elif starting_element and O:
+        assert starting_element in O, 'starting element not in the '
         assert gcd(starting_element.reduced_norm(),target_norm) == target_norm, 'starting element of wrong norm'
     else:
         raise ValueError('Not implemented')

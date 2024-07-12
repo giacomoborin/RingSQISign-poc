@@ -863,7 +863,7 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
     Computes the isogeny ϕI whose kernel corresponds to the ideal I.
 
     Input: A left O-ideal I of norm a power of l,
-           K a left O0-ideal and right O-ideal of norm l^•
+           K a left O0-ideal and right O-ideal of norm l^• (or T**2)
            The corresponding ϕK : E / <K>.
 
            Optional:
@@ -878,13 +878,12 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
 
     Output: ϕI : E / <I>
     """
-    # Ensure the norms are as expected
+    # assert I has powesmooth norm
     assert I.norm() % l == 0 or I.norm() == 1
-    assert K.norm() % l == 0 or K.norm() == 1
-
     # Ensure the orders are as expected
     assert I.left_order() == K.right_order()
     assert K.left_order() == O0
+    assert K.norm() == ϕK.degree()
 
     # If we supply equivalent_prime_ideal, make sure it
     # is of the right form
@@ -958,7 +957,10 @@ def IdealToIsogenyFromKLPT(I, K, ϕK, I_prime=None, K_prime=None, end_close_to_E
     # End Helper Functions #
     # ==================== #
 
+    # Ensure the norms are as expected
+    assert K.norm() % l == 0 or K.norm() == 1
     J, ϕJ = derive_J_and_phi_J(K, ϕK, K_prime=K_prime)
+
 
     # Compute a chain:
     # I = Iv ⊂ ... ⊂ I1 ⊂ I0
