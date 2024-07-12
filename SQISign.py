@@ -804,16 +804,17 @@ class specialSQISign():
 
         return (ϕ_ker, S)
 
-    def verify_response(self, Epk, S, ϕ_ker, mes = None):
+    def _verify_deg_cyclic(self, Epk, S, ϕ_ker):
         """
-        Verify that the compressed bitstring S corresponds to
-        an isogeny σ.dual Ech → Ecmt of degree l^e such that ϕ_dual ∘ σ
-        is cyclic, with ϕ : Epk -> Ech obtained from Ecmt
-
-        Input: Epk: the public key
-               S: a compressed bitstring of the response isogeny Ech → Ecmt
-               ϕ_ker: the kernel of the challenge isogeny ϕ : Epk → Ech
-        Output: True if the response is value, False otherwise
+        internal method that verifies:
+            - S correspont to an isogeny σ_dual of deg l**e
+            - σ_dual * ϕ : Epk -> Ecmt is cyclic
+        Input:
+            - S : bitstring
+            - ϕ_ker : kernel 
+            - Epk : starting curve
+        Output:
+            - Ecmt codomain of σ_dual
         """
         # Compute the challenge isogeny from the challenge kernel
         ϕ = EllipticCurveIsogenyFactored(Epk, ϕ_ker, order=Dc)
@@ -828,16 +829,7 @@ class specialSQISign():
         # Ensure that the domain of σ is EA
         if not σ_dual.domain() == Ech:
             print(f"DEBUG [SQISign Verify]: The domain of σ_dual is not Ech")
-            return False
-
-        if mes:
-            new_phi = self.challenge_from_message(Ecmt=σ_dual.codomain(), msg=mes)
-        else:
-            new_phi = self.challenge(Epk=Epk, Ecmt=σ_dual.codomain())
-        
-        if not new_phi == ϕ_ker:
-            print(f"DEBUG [SQISign Verify]: The codomain of σ_dual is not Ecmt")
-        
+            return False, None
 
         # Check the degree of σ is as expected
         if ZZ(σ_dual.degree()) != l**e:
@@ -845,7 +837,7 @@ class specialSQISign():
                 f"DEBUG [SQISign Verify]:"
                 f"The degree σ_dual is {factor(σ_dual.degree())}, expected {l}^{e}"
             )
-            return False
+            return False, None
 
         # Check that the isogeny ϕ_dual ∘ σ is cyclic
         print(f"INFO [SQISign Verify]: Verifying that ϕ_dual * σ is cyclic")
@@ -862,7 +854,7 @@ class specialSQISign():
 
         # Check if ϕ_dual ∘ σ is cyclic
         if has_order_D(imP, D):
-            return True
+            return True, Ecmt
 
         print(
             f"DEBUG [SQISign Verify]: σ_dual_ϕ(P) does not have full order, checking Q"
@@ -871,10 +863,39 @@ class specialSQISign():
         imQ = σ_dual_ϕ(Q)
         assert imQ.curve() == Ecmt, "Mapping is incorrect"
         if has_order_D(imQ, D):
-            return True
-
+            return True, Ecmt
+        
         print(f"DEBUG [SQISign Verify]: σ_dual_ϕ is not cyclic!")
-        return False
+        return False, None
+
+    
+    def verify_response(self, Epk, S, ϕ_ker, mes = None):
+        """
+        Verify that the compressed bitstring S corresponds to
+        an isogeny σ.dual Ech → Ecmt of degree l^e such that ϕ_dual ∘ σ
+        is cyclic, with ϕ : Epk -> Ech obtained from Ecmt
+
+        Input: Epk: the public key
+               S: a compressed bitstring of the response isogeny Ech → Ecmt
+               ϕ_ker: the kernel of the challenge isogeny ϕ : Epk → Ech
+        Output: True if the response is value, False otherwise
+        """
+        
+        valid, Ecmt = self._verify_deg_cyclic(Epk, S, ϕ_ker)
+        
+        if not valid:
+            return False
+        
+        if mes:
+            new_phi = self.challenge_from_message(Ecmt, msg=mes)
+        else:
+            new_phi = self.challenge(Epk=Epk, Ecmt=Ecmt)
+        
+        if not (new_phi == ϕ_ker):
+            print(f"DEBUG [SQISign Verify]: The codomain of σ_dual is not Ecmt")
+            return False
+        else:
+            return True
 
     def verify(self, EA, sig, msg):
         """
