@@ -14,7 +14,7 @@ sage: distinguisher(JJ, Iτ)
 3. Two variants of the SQIsign identification protocol, from XXX. The first one consider a chllenge isogeny starting from the public curve, the other achieving 
 ***strong** Honest Verifier Zero Knowledge* 
 thanks to an additional randomization step.
-4. A linear size Ring Signature based on SQISign called *Erebor*, with two version, a shorter one and a *full-anonymous* one from XXX.
+4. A linear size Ring Signature based on SQISign called *Erebor*, with two version, a shorter one and a *full-anonymous* one from [ia.cr/2024/1185](https://eprint.iacr.org/2024/1185).
 
 ## Project Overview
 
@@ -37,3 +37,4 @@ If you wish to run SQISign and test the disringuisher you can execute [`example_
 - [An improvement to the quaternion analogue of the l-isogeny path problem](https://crypto.iacr.org/2018/affevents/mathcrypt/page.html), Christophe Petit and Spike Smith (2018).
 - [Deuring for the People: Supersingular Elliptic Curves with Prescribed Endomorphism Ring in General Characteristic](https://ia.cr/2023/106) Jonathan Komada Eriksen, Lorenz Panny, Jana Sotáková, and Mattia Veroni (2023).
 - [SQIsign2D-West: The Fast, the Small, and the Safer](https://eprint.iacr.org/2024/760) Andrea Basso, Luca De Feo, Pierrick Dartois, Antonin Leroux, Luciano Maino, Giacomo Pope, Damien Robert, Benjamin Wesolowski (2024).
+- [Erebor and Durian: Full Anonymous Ring Signatures from Quaternions and Isogenies](https://eprint.iacr.org/2024/1185) Giacomo Borin, Yi-Fu Lai, Antonin Leroux (2024).
