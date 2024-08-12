@@ -11,7 +11,7 @@ sage: J = isogeny_to_ideal()
 sage: from attack import distinguisher
 sage: distinguisher(JJ, Iτ)
 ```
-3. Two variants of the SQIsign identification protocol, from XXX. The first one consider a chllenge isogeny starting from the public curve, the other achieving 
+3. Two variants of the SQIsign identification protocol, from [ia.cr/2024/1185](https://eprint.iacr.org/2024/1185). The first one consider a chllenge isogeny starting from the public curve, the other achieving 
 ***strong** Honest Verifier Zero Knowledge* 
 thanks to an additional randomization step.
 4. A linear size Ring Signature based on SQISign called *Erebor*, with two version, a shorter one and a *full-anonymous* one from [ia.cr/2024/1185](https://eprint.iacr.org/2024/1185).
