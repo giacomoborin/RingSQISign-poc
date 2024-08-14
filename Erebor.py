@@ -2,27 +2,11 @@
 from hashlib import shake_128
 
 # SageMath imports
-from sage.all import randint, ZZ, factor, proof, seed, ceil, log, EllipticCurveIsogeny # type: ignore
-from sage.schemes.elliptic_curves.weierstrass_morphism import WeierstrassIsomorphism
-from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
+from sage.all import proof # type: ignore
 
 # Local imports
-from ideals import (
-    is_integral,
-    is_cyclic,
-    multiply_ideals,
-    equivalent_left_ideals,
-    left_isomorphism,
-    random_equivalent_prime_ideal_bounded
-)
-from isogenies import torsion_basis, dual_isogeny, EllipticCurveIsogenyFactored, generate_point_order_D
-from deuring import IdealToIsogenyFromKLPT, kernel_to_ideal
-from KLPT import RepresentIntegerHeuristic, SigningKLPT
-from compression import compression, decompression, compute_R
-from utilities import inert_prime, has_order_D
-from setup import E0, O0, Bτ, eτ, p, l, Dc, T_prime, ω, e, f_step_max, T
-
-import random
+from setup import p
+from isogenies import EllipticCurveIsogenyFactored
 
 proof.all(False)
 
@@ -44,7 +28,7 @@ class Erebor():
         """
         # Keys
         self.ring = ring
-        if not all([E.is_supersingular() for E in self.ring]):
+        if not all([E.order() == (p**2-1)**2 for E in self.ring]):
             raise ValueError('Publick Keys need to be supersingular elliptic curves')
 
         if user:
@@ -77,12 +61,10 @@ class Erebor():
         Use SQISign to sign a message by creating a challenge
         isogeny from the message and generating a response S
         from the challenge.
-
         Input: msg: the message to be signed
-
         Output: sig: a signature tuple (ker, list)
-                    ker : the kernel of the challenge
-                    list: contains N bitstrings associated to isogenies
+                ker : the kernel of the challenge
+                list: contains N bitstrings associated to isogenies
         """
         N = len(self.ring)
         Ecmt = self.user.commitment()

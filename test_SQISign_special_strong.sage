@@ -38,7 +38,7 @@ Ecmt = prover.commitment()
 print_info(f"Commitment took {time.time() - commitment_time:5f}")
 
 # Check commitment secret values
-psi, Ipsi = prover.commitment_secrets
+psi, Ipsi, _ = prover.commitment_secrets
 assert psi.degree() == Ipsi.norm()
 
 # Challenge

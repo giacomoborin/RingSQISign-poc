@@ -81,7 +81,7 @@ verify(): Given a message, and the signature (E1, σ) generates a
 from hashlib import shake_128
 
 # SageMath imports
-from sage.all import randint, ZZ, factor, proof, seed, ceil, log, EllipticCurveIsogeny # type: ignore
+from sage.all import randint, ZZ, factor, proof, seed, ceil, log, EllipticCurveIsogeny, sqrt # type: ignore
 from sage.schemes.elliptic_curves.weierstrass_morphism import WeierstrassIsomorphism
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
@@ -179,6 +179,7 @@ def efficient_keygen():
         τ_prime.degree() == Jτ.norm()
     ), f"{factor(τ_prime.degree()) = } {factor(Jτ.norm()) = }"
 
+    EA.set_order((p**2 - 1) ** 2)
     return EA, τ_prime, Iτ, Jτ
 
 def gen_isogeny_power_l():
@@ -189,7 +190,12 @@ def gen_isogeny_power_l():
     # in R[ω].
     # Note: this is the same as picking p ≡ 3 mod 4
     Nl = l**eτ
-    Nτ = T_prime
+    for _ in range(1000):
+        Nτ = inert_prime(ceil(sqrt(p)), -ZZ(ω**2))
+        # We need the product to be large enough for
+        # RepresentIntegerHeuristic.
+        if Nτ * Nl > 2 * p:
+            break
     assert Nτ * Nl > 2 * p
     # Compute an endomorphism γ of norm Nτ l^eτ
     # Nτ < Bτ
@@ -234,6 +240,7 @@ def gen_isogeny_power_l():
         τ_prime.degree() == Jτ.norm()
     ), f"{factor(τ_prime.degree()) = } {factor(Jτ.norm()) = }"
 
+    EA.set_order((p**2 - 1) ** 2)
     return EA, τ_prime, Jτ, Iτ
 
 def gen_isogeny_coprime():
@@ -262,6 +269,7 @@ def gen_isogeny_coprime():
     ψ = EllipticCurveIsogenyFactored(E0, ψ_ker, order=T_prime)
     E1 = ψ.codomain()
 
+    E1.set_order((p**2 - 1) ** 2)
     return E1, ψ_ker, ψ, Iψ
 
 
@@ -300,6 +308,9 @@ def simulation(Estart, length):
     Outpur:
         - S, compressed isogeny of degree 2**length starting from Estart
         - Eend, codomain of this isogeny
+
+    Note: we could speed up this procedure by performing the kernel 
+    generations and the compression at the same time.
     """
     resp = 1
     P,Q = torsion_basis(Estart, D = l**f_step_max, canonical = False)
@@ -323,6 +334,7 @@ def simulation(Estart, length):
     P,_ = compute_R(E,Q,2**e_deg)
     resp = EllipticCurveIsogenyFactored(E,P + randint(0,2**e_deg-1)*Q, order = l**e_deg) * resp
     Eend = resp.codomain()
+    Eend.set_order((p**2 - 1) ** 2)
     # note that we are compressing the isogeny
     # resp : Estart ---> Eend
     S = compression(Estart, resp, l, f_step_max)
@@ -921,7 +933,10 @@ class specialSQISign():
 class specialSQISign_strong(specialSQISign):
     def __init__(self):
         super().__init__()
-        self.e = ceil(log(p,l)*19/4 + 9*loglogp) # should be log(p,l)*19/4, dont know why I need to add so much
+        self.e =  ceil(21/4 * log(p,l) + 3*loglogp)
+        if p == 73743043621499797449074820543863456997944695372324032511999999999999999999999:
+            self.e = 1364
+        print(f"INFO [SQISign Initialization]: degree e fixed to {self.e}")
         self.Bound = (p**(1/2) * p**(1/4))
     
     def commitment(self):
@@ -931,8 +946,8 @@ class specialSQISign_strong(specialSQISign):
         and associated ideal
         """
         Ecmt, psi, Jpsi, Ipsi = gen_isogeny_power_l()
-        # for now we do not need Ipsi
-        self.commitment_secrets = psi, Jpsi
+        # Ipsi is an equivalent prime ideal
+        self.commitment_secrets = psi, Jpsi, Ipsi
         return Ecmt
     
     def response(self, φ_ker):
@@ -953,16 +968,14 @@ class specialSQISign_strong(specialSQISign):
                 f"Must first generate a commitment with `self.commitment()`"
             )
 
-        e = self.e
         phi = EllipticCurveIsogenyFactored(self.pk,ϕ_ker)
-        Ech = phi.codomain()
         # Extract secret values from keygen, note that
         # that we do not need Itau
         Jtau, tau, tau_ker = self.sk
         # tau has degree Tprime
 
         # Extract values from commitment
-        psi, Jpsi = self.commitment_secrets
+        psi, Jpsi, Ipsi_small = self.commitment_secrets
         assert psi.degree() == Jpsi.norm()
         Ipsi,_ = random_equivalent_prime_ideal_bounded(Jpsi, Bound = self.Bound)
 
@@ -984,7 +997,7 @@ class specialSQISign_strong(specialSQISign):
 
         print(f"INFO [SQISign Response]: Running SigningKLPT")
         #TODO here we need the randomization with 
-        J = SigningKLPT(I, Ipsi, e=self.e, print_L=True)
+        J = SigningKLPT(I, Ipsi, e = self.e, print_L=True)
         assert J.norm() == l**self.e, "SigningKLPT produced an ideal with incorrect norm"
         print(f"INFO [SQISign Response]: Finished SigningKLPT")
 
@@ -999,17 +1012,18 @@ class specialSQISign_strong(specialSQISign):
         assert J.left_order() == Jpsi.right_order()
 
         print(f"INFO [SQISign Response]: Computing the corresponding isogeny")
-        σ = IdealToIsogenyFromKLPT(J, Jpsi, psi)
+        σ = IdealToIsogenyFromKLPT(J, Jpsi, psi, K_prime=Ipsi_small)
         print(f"INFO [SQISign Response]: Computed the isogeny EA → E2")
 
         assert phi.codomain().j_invariant() == σ.codomain().j_invariant(), "final curve different from expected"
         # add eventual missing morphism
-        if phi.codomain() != σ.codomain():
+        σ_dual = σ.dual()
+        if phi.codomain() != σ_dual.domain():
             print(f"INFO [SQISign Response]: Isomorphism required to have  ")
-            σ = WeierstrassIsomorphism(σ.codomain(), None, phi.codomain()) * σ
+            σ_dual = σ_dual * WeierstrassIsomorphism(phi.codomain(), None, σ_dual.domain()) 
 
-        print(f"INFO [SQISign Response]: Compressing the isogeny σ to a bitstring")
-        S = compression(phi.codomain(), σ.dual(), l, f_step_max)
+        print(f"INFO [SQISign Response]: Compressing the isogeny σ_dual to a bitstring")
+        S = compression(phi.codomain(), σ_dual, l, f_step_max)
         print(
             f"INFO [SQISign Response]:"
             f"Compressed the isogeny σ to a bitstring of length {len(S)}"

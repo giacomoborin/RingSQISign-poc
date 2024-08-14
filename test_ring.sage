@@ -18,7 +18,7 @@ for us in ring_users:
     us.keygen()
     ring_pk.append(us.export_public_key())
 
-idx = randint(0,2)
+idx = randint(0,N-1)
 user = ring_users[idx]
 
 RS = Erebor(ring_pk, user)
