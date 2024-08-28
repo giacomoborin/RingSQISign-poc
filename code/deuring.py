@@ -31,7 +31,7 @@ from sage.all import gcd, ZZ, factor, floor, log, prod
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
 # Local imports
-from ideals import (
+from .ideals import (
     equivalent_left_ideals,
     left_isomorphism,
     chi,
@@ -45,7 +45,7 @@ from ideals import (
     pushforward_ideal,
     pullback_ideal
 )
-from isogenies import (
+from .isogenies import (
     torsion_basis,
     dual_isogeny_and_kernel,
     dual_isogeny,
@@ -53,11 +53,11 @@ from isogenies import (
     BiDLP,
     DLP
 )
-from KLPT import EquivalentSmoothIdealHeuristic
-from mitm import meet_in_the_middle_with_kernel
-from utilities import has_order_D, print_info
+from .KLPT import EquivalentSmoothIdealHeuristic
+from .mitm import meet_in_the_middle_with_kernel
+from .utilities import has_order_D, print_info
 
-from setup import E0, O0, l, T, f_step_max, Δ, p, sqrt_minus_one, prime_norm_heuristic
+from .setup import E0, O0, l, T, f_step_max, Δ, p, sqrt_minus_one, prime_norm_heuristic
 
 # ================================ #
 #  Compute the action of End(E0)   #

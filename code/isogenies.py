@@ -32,8 +32,8 @@ from sage.schemes.elliptic_curves.hom_velusqrt import EllipticCurveHom_velusqrt
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
 # Local imports
-from utilities import has_order_D
-from pari_interface import discrete_log_pari
+from .utilities import has_order_D
+from .pari_interface import discrete_log_pari
 
 # =========================================== #
 # Compute points of order D and Torsion Bases #

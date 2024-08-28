@@ -5,12 +5,12 @@ from hashlib import shake_128
 from sage.all import proof # type: ignore
 
 # Local imports
-from setup import p
-from isogenies import EllipticCurveIsogenyFactored
+from .setup import p
+from .isogenies import EllipticCurveIsogenyFactored
 
 proof.all(False)
 
-from SQISign import ( 
+from .SQISign import ( 
     specialSQISign, specialSQISign_strong, simulation, 
     ker_for_challenge, curve_to_int
     )

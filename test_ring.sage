@@ -2,9 +2,9 @@
 import time
 
 # Local imports
-from Erebor import Erebor
-from SQISign import specialSQISign_strong, specialSQISign
-from utilities import print_info
+from code.Erebor import Erebor
+from code.SQISign import specialSQISign_strong, specialSQISign
+from code.utilities import print_info
 
 N = 3
 full_anon = True

@@ -86,7 +86,7 @@ from sage.schemes.elliptic_curves.weierstrass_morphism import WeierstrassIsomorp
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
 # Local imports
-from ideals import (
+from .ideals import (
     is_integral,
     is_cyclic,
     multiply_ideals,
@@ -94,12 +94,12 @@ from ideals import (
     left_isomorphism,
     random_equivalent_prime_ideal_bounded
 )
-from isogenies import torsion_basis, dual_isogeny, EllipticCurveIsogenyFactored, generate_point_order_D
-from deuring import IdealToIsogenyFromKLPT, kernel_to_ideal
-from KLPT import RepresentIntegerHeuristic, SigningKLPT
-from compression import compression, decompression, compute_R
-from utilities import inert_prime, has_order_D
-from setup import E0, O0, Bτ, eτ, p, l, Dc, T_prime, ω, e, f_step_max, T, loglogp
+from .isogenies import torsion_basis, dual_isogeny, EllipticCurveIsogenyFactored, generate_point_order_D
+from .deuring import IdealToIsogenyFromKLPT, kernel_to_ideal
+from .KLPT import RepresentIntegerHeuristic, SigningKLPT
+from .compression import compression, decompression, compute_R
+from .utilities import inert_prime, has_order_D
+from .setup import E0, O0, Bτ, eτ, p, l, Dc, T_prime, ω, e, f_step_max, T, loglogp
 
 import random
 

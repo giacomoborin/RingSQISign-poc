@@ -47,7 +47,7 @@ from sage.all import (
 )
 
 # Local imports
-from ideals import (
+from .ideals import (
     chi,
     is_integral,
     is_cyclic,
@@ -62,9 +62,9 @@ from ideals import (
     small_equivalent_ideal,
     quadratic_norm,
 )
-from utilities import Cornacchia, generate_bounded_divisor, is_inert
-from lattices import generate_close_vectors, generate_small_norm_quat
-from setup import (
+from .utilities import Cornacchia, generate_bounded_divisor, is_inert
+from .lattices import generate_close_vectors, generate_small_norm_quat
+from .setup import (
     O0,
     p,
     q,

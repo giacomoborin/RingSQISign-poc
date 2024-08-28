@@ -7,9 +7,9 @@ assertions and debugging prints.
 import time
 
 # Local imports
-from SQISign import specialSQISign_strong
-from utilities import print_info
-from setup import *
+from code.SQISign import specialSQISign_strong
+from code.utilities import print_info
+from code.setup import *
 
 prover = specialSQISign_strong()
 verifier = specialSQISign_strong()

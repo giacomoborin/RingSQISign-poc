@@ -22,7 +22,7 @@ from sage.all import (
 )
 
 # Local imports
-from parameters import params
+from .parameters import params
 
 # Speedy and still (mostly) correct
 proof.all(False)

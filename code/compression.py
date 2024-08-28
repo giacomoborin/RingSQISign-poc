@@ -40,13 +40,13 @@ from sage.all import ZZ
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
 # Local imports
-from isogenies import (
+from .isogenies import (
     torsion_basis,
     generate_random_point,
     EllipticCurveIsogenyFactored,
     DLP
 )
-from utilities import has_order_D
+from .utilities import has_order_D
 
 # ========================================= #
 #  Functions to pack an isogeny into blocks #

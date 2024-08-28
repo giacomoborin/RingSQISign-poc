@@ -23,12 +23,12 @@ from sage.all import (
 from sage.schemes.elliptic_curves.hom_composite import EllipticCurveHom_composite
 
 # Local imports
-from isogenies import (
+from .isogenies import (
     generate_kernels_division_polynomial,
     kernel_from_isogeny_prime_power,
     generate_kernels_prime_power,
 )
-from setup import Fp2
+from .setup import Fp2
 
 # ============================================= #
 # Compute j-invariants from modular polynomials #

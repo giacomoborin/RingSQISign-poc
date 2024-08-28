@@ -1,6 +1,6 @@
-from setup import p, O0, logp, loglogp, Dc, T, l, e
-from KLPT import derive_L, RepresentIntegerHeuristic, derive_L2_SigningKLPT
-from ideals import left_isomorphism, pullback_ideal, equivalent_left_ideals
+from code.setup import p, O0, logp, loglogp, Dc, T, l, e
+from code.KLPT import derive_L, RepresentIntegerHeuristic, derive_L2_SigningKLPT
+from code.ideals import left_isomorphism, pullback_ideal, equivalent_left_ideals
 from sage.all import floor, log, is_square, IntegerModRing
 
 def distinguisher(JJ, Iτ, e = e):

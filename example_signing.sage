@@ -17,8 +17,8 @@ sent between parties.
 import time
 
 # Local imports
-from SQISign import SQISign
-from utilities import print_info
+from code.SQISign import SQISign
+from code.utilities import print_info
 
 
 # SQISign is a protocol between a signer and verifier

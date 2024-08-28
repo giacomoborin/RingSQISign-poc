@@ -27,8 +27,8 @@ from sage.all import (
 )
 
 # Local imports
-from setup import p, O0, ω
-from utilities import cornacchia_friendly
+from .setup import p, O0, ω
+from .utilities import cornacchia_friendly
 
 # ================================================ #
 #  Helpers for elements of the quaternion algebra  #
