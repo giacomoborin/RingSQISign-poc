@@ -184,7 +184,16 @@ def efficient_keygen():
 
 def gen_isogeny_power_l():
     """
-    as for efficient key gen generate the isogeny
+    Procedure generating an isogeny power of l, as of now it uses the efficient 
+    keygen as described in Appendix D of the SQISign paper
+
+    Input: None
+    Output: 
+        - EA: the codomain of the isogeny τ_prime
+        - τ_prime: the secret isogeny from E0 → EA
+        - Jτ: ideal with smooth norm, equivalent to Iτ and to
+                τ_prime under the Deuring correspondence
+        - Iτ: ideal with prime norm equivalent to Jτ
     """
     # Compute a random prime ≤ Bτ which is inert
     # in R[ω].
